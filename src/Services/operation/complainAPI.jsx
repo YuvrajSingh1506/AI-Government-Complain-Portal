@@ -23,7 +23,7 @@ export const createComplainApi = async(formData) =>{
         return response.data;
     }catch(err){
         console.log(err);
-        toast.error("Failed to create complain");
+        toast.error( err.response?.data?.message || err.message || "Failed to create complain");
         return null;
     }
     finally{
@@ -49,7 +49,7 @@ export const getUserComplain = async()=>{
 
     }catch(err){
         console.log(err);
-        toast.error("Failed to get Complain");
+        toast.error( err.response?.data?.message || err.message || "Failed to get Complain");
         return null;
     }finally{
         toast.dismiss(toastId);
@@ -72,7 +72,7 @@ export const getComplainDetail = async(complainId)=>{
         return response;
     }catch(err){
         console.log(err);
-        toast.error("Failed to get Complain data");
+        toast.error( err.response?.data?.message || err.message || "Failed to get Complain data");
         return null;
     }finally{
         toast.dismiss(toastId);
@@ -95,7 +95,7 @@ export const deleteComplaintApi = async(complainId) =>{
 
     }catch(err){
         console.log(err);
-        toast.error("Failed to delete complain");
+        toast.error( err.response?.data?.message || err.message || "Failed to delete complain");
     }finally{
         toast.dismiss(toastId);
     }

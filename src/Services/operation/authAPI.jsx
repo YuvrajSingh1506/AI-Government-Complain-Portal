@@ -22,7 +22,7 @@ export const signUp = async (name, email, password, confirmPassword, role, navig
             navigate("/login");  
         }catch(err){
             console.log("USER ERROR", err);
-            toast.error("Failed to create user");
+            toast.error( err.response?.data?.message || err.message || "Failed to create user");
         }
         finally{
 
@@ -63,7 +63,7 @@ export const login = async({email , password,navigate}) =>{
         return data;
     }catch(err){
         console.log(err);
-        toast.error("Failed to login");
+        toast.error( err.response?.data?.message || err.message || "Failed to login");
         return null;
     }
     finally{

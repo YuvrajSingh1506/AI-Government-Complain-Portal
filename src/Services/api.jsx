@@ -9,4 +9,7 @@ export const complainEndpoints = {
     GET_USER_COMPLAIN_API : `${BASE_URL}complain/myComplains`,
     GET_COMPLAIN_API : `${BASE_URL}complain/getComplainDetails`,
     DELETE_COMPLAIN_API : `${BASE_URL}complain/deleteMyComplains`,
+    GET_ALL_COMPLAIN_API : `${BASE_URL}complain/getAllComplains`,
+    GET_DASHBOARD_DATA_API : `${BASE_URL}complain/getDashboardData`,
+    ASSIGN_COMPLAIN_API : `${BASE_URL}complain/assignComplain`
 }

@@ -1,32 +1,47 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { FileText, Clock, CheckCircle, Loader, X } from "lucide-react"
 import { complaints as initialComplaints, OFFICIALS, DEPARTMENTS } from "../data/mockData.js"
 import StatusBadge from "../components/StatusBadge.jsx"
+import { assignComplainAPI, getAllComplainsAPI, getDashboardDataAPI } from "../Services/operation/complainAdminAPI.jsx"
 
 export default function AdminDashboard() {
-  const [complaints, setComplaints] = useState(initialComplaints)
+  const [complaints, setComplaints] = useState([])
   const [modalComplaint, setModalComplaint] = useState(null)
   const [official, setOfficial] = useState("")
   const [department, setDepartment] = useState("")
-
+  const [officials, setOfficials] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  useEffect(()=>{
+    const fetchAllComplaints = async()=>{
+      const response = await getAllComplainsAPI();
+      setComplaints(response.data.complains);
+    }
+    const fetchAllData = async()=>{
+      const response = await getDashboardDataAPI();
+      setOfficials(response.data.dashboard.totalOfficial);
+      setDepartments(response.data.dashboard.totalDepartment);
+    }
+    fetchAllComplaints();
+    fetchAllData();
+  },[]);
   const stats = [
     { label: "Total", value: complaints.length, icon: <FileText size={20} />, color: "text-primary" },
     {
       label: "Pending",
-      value: complaints.filter((c) => c.status === "Pending").length,
+      value: complaints.filter((c) => c.status === "PENDING").length,
       icon: <Clock size={20} />,
       color: "text-amber-600",
     },
     {
       label: "In Progress",
-      value: complaints.filter((c) => c.status === "In Progress").length,
+      value: complaints.filter((c) => c.status === "IN PROGRESS").length,
       icon: <Loader size={20} />,
       color: "text-blue-600",
     },
     {
       label: "Resolved",
-      value: complaints.filter((c) => c.status === "Resolved").length,
+      value: complaints.filter((c) => c.status === "RESOLVED").length,
       icon: <CheckCircle size={20} />,
       color: "text-green-600",
     },
@@ -38,15 +53,10 @@ export default function AdminDashboard() {
     setDepartment(complaint.department || "")
   }
 
-  const handleAssign = (e) => {
+  const handleAssign = async (e) => {
     e.preventDefault()
-    setComplaints((prev) =>
-      prev.map((c) =>
-        c.id === modalComplaint.id
-          ? { ...c, assignedOfficial: official, department, status: c.status === "Pending" ? "In Progress" : c.status }
-          : c,
-      ),
-    )
+    // console.log("shd",official,"sadwd",department);
+    await assignComplainAPI(official,department);
     setModalComplaint(null)
   }
 
@@ -80,10 +90,10 @@ export default function AdminDashboard() {
           </thead>
           <tbody>
             {complaints.map((c) => (
-              <tr key={c.id} className="border-b border-border last:border-0">
+              <tr key={c._id} className="border-b border-border last:border-0">
                 <td className="px-4 py-3">
-                  <Link to={`/complaints/${c.id}`} className="font-medium text-primary hover:underline">
-                    {c.id}
+                  <Link to={`/complaints/${c._id}`} className="font-medium text-primary hover:underline">
+                    {c._id}
                   </Link>
                 </td>
                 <td className="px-4 py-3">{c.title}</td>
@@ -117,7 +127,7 @@ export default function AdminDashboard() {
               </button>
             </div>
             <p className="mb-4 text-sm text-muted">
-              {modalComplaint.id} — {modalComplaint.title}
+              {modalComplaint._id} — {modalComplaint.title}
             </p>
             <form onSubmit={handleAssign} className="flex flex-col gap-4">
               <div>
@@ -128,9 +138,9 @@ export default function AdminDashboard() {
                   className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 >
                   <option value="">Select department</option>
-                  {DEPARTMENTS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
+                  {departments.map((d) => (
+                    <option key={d._id} value={d._id}>
+                      {d.name}
                     </option>
                   ))}
                 </select>
@@ -143,8 +153,8 @@ export default function AdminDashboard() {
                   className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                 >
                   <option value="">Select official</option>
-                  {OFFICIALS.map((o) => (
-                    <option key={o.id} value={o.name}>
+                  {officials.map((o) => (
+                    <option key={o._id} value={o._id}>
                       {o.name} ({o.department})
                     </option>
                   ))}

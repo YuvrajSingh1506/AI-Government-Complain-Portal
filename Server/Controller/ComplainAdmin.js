@@ -116,49 +116,42 @@ exports.rejectComplain = async (req, res) => {
 };
 exports.getComplainData = async(req, res) =>{
     try{
-        const totalComplain = await Complain.countDocuments();
-        const pendingComplain = await Complain.countDocuments({
-            status : "PENDING"
-        })
-        const assignedComplain = await Complain.countDocuments({
-            status : "ASSIGNED"
-        })
-        const inProgessComplain = await Complain.countDocuments({
-            status : "IN_PROGRESS"
-        })
-        const resolvedComplain = await Complain.countDocuments({
-            status : "RESOLVED"
-        })
-        const rejectedComplain = await Complain.countDocuments({
-            status : "REJECTED",
-        })
+        // const totalComplain = await Complain.countDocuments();
+        // const pendingComplain = await Complain.countDocuments({
+        //     status : "PENDING"
+        // })
+        // const assignedComplain = await Complain.countDocuments({
+        //     status : "ASSIGNED"
+        // })
+        // const inProgessComplain = await Complain.countDocuments({
+        //     status : "IN_PROGRESS"
+        // })
+        // const resolvedComplain = await Complain.countDocuments({
+        //     status : "RESOLVED"
+        // })
+        // const rejectedComplain = await Complain.countDocuments({
+        //     status : "REJECTED",
+        // })
 
-        const totalDepartment = await Department.countDocuments();
+        const totalDepartment = await Department.find();
 
-        const totalOfficial = await User.countDocuments({
+        const totalOfficial = await User.find({
             role : "Official"
         })
-        const totalUser = await User.countDocuments({
+        const totalUser = await User.find({
             role : "Citizen"
-        })
-        const recentComplains = await Complain.find()
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select("title status createdAt");
+        }).populate("department");
+        // const recentComplains = await Complain.find()
+        // .sort({ createdAt: -1 })
+        // .limit(5)
+        // .select("title status createdAt");
         return res.status(200).json({
             success : true,
             message : "All data fetch successfully",
             dashboard : {
-                totalComplain : totalComplain,
-                pendingComplain : pendingComplain,
-                assignedComplain : assignedComplain,
-                inProgessComplain : inProgessComplain,
-                resolvedComplain : resolvedComplain,
-                rejectedComplain : rejectedComplain,
-                totalDepartment  : totalDepartment,
-                totalOfficial : totalOfficial,
-                totalUser : totalUser,
-                recentComplains,
+                totalDepartment,
+                totalOfficial,
+                totalUser,
             }
         })
     }catch(err){
