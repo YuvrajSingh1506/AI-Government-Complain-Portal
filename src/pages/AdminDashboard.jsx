@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [department, setDepartment] = useState("")
   const [officials, setOfficials] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [complain, setComplain] = useState("");
   useEffect(()=>{
     const fetchAllComplaints = async()=>{
       const response = await getAllComplainsAPI();
@@ -55,8 +56,8 @@ export default function AdminDashboard() {
 
   const handleAssign = async (e) => {
     e.preventDefault()
-    // console.log("shd",official,"sadwd",department);
-    await assignComplainAPI(official,department);
+    console.log("shd",complain,"sadwd",department);
+    await assignComplainAPI(complain,department);
     setModalComplaint(null)
   }
 
@@ -104,7 +105,10 @@ export default function AdminDashboard() {
                 </td>
                 <td className="px-4 py-3">
                   <button
-                    onClick={() => openModal(c)}
+                    onClick={() => {
+                        openModal(c);
+                        setComplain(c._id);
+                    }}
                     className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
                   >
                     Assign

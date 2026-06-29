@@ -54,13 +54,13 @@ export const getDashboardDataAPI = async()=>{
         toast.dismiss(toastId);
     }
 }
-export const assignComplainAPI = async(official, department)=>{
+export const assignComplainAPI = async(complain, department)=>{
     const toastId = toast.loading("Loading...");
     // console.log(official,department);
     try{
         const response = await apiConnector("PUT", ASSIGN_COMPLAIN_API,
             {
-                officialId : official,
+                complainId : complain,
                 departmentId : department
             },
             {
