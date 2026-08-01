@@ -1,0 +1,118 @@
+# ==========================
+# Environment Variables
+# ==========================
+node_modules/
+.env
+.env.*
+.env
+.env.*
+!.env.example
+
+Backend/.env
+Backend/.env.*
+!Backend/.env.example
+
+Frontend/.env
+Frontend/.env.*
+!Frontend/.env.example
+
+# ==========================
+# Dependencies
+# ==========================
+
+Backend/node_modules/
+Frontend/node_modules/
+
+node_modules/
+**/node_modules/
+
+# ==========================
+# Build Output
+# ==========================
+
+Backend/dist/
+Backend/build/
+
+Frontend/dist/
+Frontend/build/
+
+dist/
+build/
+coverage/
+
+# ==========================
+# Logs
+# ==========================
+
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================
+# Runtime Files
+# ==========================
+
+*.pid
+*.pid.lock
+
+# ==========================
+# IDE
+# ==========================
+
+.vscode/
+.idea/
+
+# ==========================
+# Operating System
+# ==========================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==========================
+# Temporary Files
+# ==========================
+
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.nyc_output/
+
+# ==========================
+# Vercel
+# ==========================
+
+.vercel/
+
+# ==========================
+# Docker (optional)
+# ==========================
+
+.docker/
+
+# ==========================
+# v0
+# ==========================
+
+__v0_runtime_loader.js
+__v0_devtools.tsx
+__v0_jsx-dev-runtime.ts
+.snowflake/
+.v0-trash/
+
+# ==========================
+# Keep these files tracked
+# ==========================
+
+!package.json
+!package-lock.json
+!yarn.lock
+!pnpm-lock.yaml
+!Dockerfile
+!docker-compose.yml
+!README.md
