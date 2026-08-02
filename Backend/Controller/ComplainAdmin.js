@@ -1,6 +1,8 @@
 const Complain = require("../Models/Complain");
 const User = require("../Models/User");
 const Department = require("../Models/Department");
+const { getCache, setCache } = require("../Utils/cacheServices");
+
 exports.assignComplain = async(req,res) =>{
     try{
         const {complainId, departmentId} = req.body;
@@ -116,23 +118,17 @@ exports.rejectComplain = async (req, res) => {
 };
 exports.getComplainData = async(req, res) =>{
     try{
-        // const totalComplain = await Complain.countDocuments();
-        // const pendingComplain = await Complain.countDocuments({
-        //     status : "PENDING"
-        // })
-        // const assignedComplain = await Complain.countDocuments({
-        //     status : "ASSIGNED"
-        // })
-        // const inProgessComplain = await Complain.countDocuments({
-        //     status : "IN_PROGRESS"
-        // })
-        // const resolvedComplain = await Complain.countDocuments({
-        //     status : "RESOLVED"
-        // })
-        // const rejectedComplain = await Complain.countDocuments({
-        //     status : "REJECTED",
-        // })
+        const cacheKey = "admin:dashboard";
 
+        const cachedData = await getCache(cacheKey);
+        if(cachedData){
+            // console.log("from redis");
+            return res.status(200).json({
+                success : true,
+                message : "All data fetch successfully",
+                dashboard : JSON.parse(cachedData),
+            })
+        }
         const totalDepartment = await Department.find();
 
         const totalOfficial = await User.find({
@@ -141,18 +137,18 @@ exports.getComplainData = async(req, res) =>{
         const totalUser = await User.find({
             role : "Citizen"
         }).populate("department");
-        // const recentComplains = await Complain.find()
-        // .sort({ createdAt: -1 })
-        // .limit(5)
-        // .select("title status createdAt");
+
+        const dashboard = {
+            totalDepartment,
+            totalOfficial,
+            totalUser,
+        }
+        await setCache(cacheKey, dashboard, 600);
+
         return res.status(200).json({
             success : true,
             message : "All data fetch successfully",
-            dashboard : {
-                totalDepartment,
-                totalOfficial,
-                totalUser,
-            }
+            dashboard,
         })
     }catch(err){
         console.log(err);

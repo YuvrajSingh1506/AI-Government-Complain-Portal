@@ -1,6 +1,8 @@
 const User = require("../Models/User");
 const bycrpt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { deleteCache } = require("../Utils/cacheServices");
+
 exports.signUp = async(req, res) =>{
     try{
         const {name, email, password, confirmPassword, role, department} = req.body;
@@ -31,6 +33,7 @@ exports.signUp = async(req, res) =>{
             department : department,
             role : role,
         })
+        await deleteCache("admin:dashboard");
         const userObj = user.toObject();
         delete userObj.password;
         res.status(201).json({

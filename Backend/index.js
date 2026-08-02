@@ -9,6 +9,7 @@ const userRoutes = require("./Routes/User");
 const deptRoutes = require("./Routes/Department");
 const complainRoutes = require("./Routes/Complain");
 const cors = require("cors");
+const { connectRedis } = require("./Config/redis");
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
@@ -39,3 +40,5 @@ app.use("/api/v1/complain",complainRoutes);
 dbConnect();
 
 cloudinaryConnect();
+
+connectRedis();

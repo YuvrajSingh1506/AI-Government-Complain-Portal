@@ -17,14 +17,15 @@ const {
     getAllComplains
 } = require("../Controller/ComplainAdmin");
 
-const{
+const {
     getAssignedComplain,
     updateComplainStatus
-}= require("../Controller/ComplainOfficial")
+} = require("../Controller/ComplainOfficial");
+
 //Citizen routes
-route.post("/createComplain",auth, isCitizen, createComplain);
+route.post("/createComplain", auth, isCitizen, createComplain);
 route.get("/getComplainDetails/:complainId", auth, getComplainDetail);
-route.put("/updateComplain/:complainId",auth, isCitizen, updateComplain);
+route.put("/updateComplain/:complainId", auth, isCitizen, updateComplain);
 route.get("/myComplains", auth, isCitizen, getMyComplains);
 route.delete("/deleteMyComplains/:complainId", auth, isCitizen, deleteComplain);
 

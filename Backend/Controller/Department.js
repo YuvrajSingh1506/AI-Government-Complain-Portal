@@ -1,4 +1,5 @@
 const Department = require("../Models/Department");
+const { deleteCache, getCache, setCache } = require("../Utils/cacheServices");
 exports.createDepartment = async(req, res) =>{
     try{
         const {name, description} = req.body;
@@ -21,6 +22,8 @@ exports.createDepartment = async(req, res) =>{
             name : name,
             description : description,
         })
+        await deleteCache("departmentData");
+        await deleteCache("admin:dashboard");
         return res.status(200).json({
             success : true,
             department : depart, 
@@ -37,7 +40,20 @@ exports.createDepartment = async(req, res) =>{
 }
 exports.getAllDepartment = async(req,res)=>{
     try{
+        const cacheKey = "departmentData";
+
+        const cachedDepartments = await getCache(cacheKey);
+        if(cachedDepartments){
+            return res.status(200).json({
+                success : true,
+                message :"All department get fetch successfully",
+                departments : JSON.parse(cachedDepartments),
+            })
+        }
+
         const departments = await Department.find({});
+        await setCache(cacheKey, departments, 1800);
+
         return res.status(200).json({
             success : true,
             message :"All department get fetch successfully",
@@ -79,6 +95,8 @@ exports.updateDepartment = async(req, res) =>{
                 message: "Department not found",
             });
         }
+        await deleteCache("departmentData");
+        await deleteCache("admin:dashboard");
         return res.status(200).json({
             success : true,
             message : "Department updated Successfully",
@@ -102,6 +120,8 @@ exports.deleteDepartment = async(req, res) =>{
                 message: "Department not found",
             });
         }
+        await deleteCache("departmentData");
+        await deleteCache("admin:dashboard");
         return res.status(200).json({
             success : true,
             message : "Department deleted Successfully",
