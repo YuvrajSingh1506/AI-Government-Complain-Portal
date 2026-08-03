@@ -4,7 +4,8 @@ import toast from "react-hot-toast";
 const {
     GET_ALL_COMPLAIN_API,
     GET_DASHBOARD_DATA_API,
-    ASSIGN_COMPLAIN_API
+    ASSIGN_COMPLAIN_API,
+    REJECT_COMPLAIN_API
 } = complainEndpoints;
 export const getAllComplainsAPI = async()=>{
     const toastId = toast.loading("Loading...");
@@ -74,9 +75,35 @@ export const assignComplainAPI = async(complain, department)=>{
         return response;
     }catch(err){
         console.log(err);
-        toast.error(err.response.data.message || err.message || "Failed to assign complain");
+        toast.error(err.response?.data?.message || err.message || "Failed to assign complain");
         return null;
     }finally{
+        toast.dismiss(toastId);
+    }
+}
+
+export const rejectComplainAPI = async (complainId, rejectionReason) => {
+    const toastId = toast.loading("Rejecting complaint...");
+    try {
+        const response = await apiConnector("PUT", REJECT_COMPLAIN_API,
+            {
+                complainId,
+                rejectionReason
+            },
+            {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
+        );
+        if (!response.data.success) {
+            throw new Error(response.data.message);
+        }
+        toast.success("Complaint rejected successfully");
+        return response;
+    } catch (err) {
+        console.log(err);
+        toast.error(err.response?.data?.message || err.message || "Failed to reject complaint");
+        return null;
+    } finally {
         toast.dismiss(toastId);
     }
 }

@@ -133,3 +133,61 @@ exports.updateComplainStatus = async (req, res) => {
         });
     }
 };
+
+exports.updateLeaveStatus = async(req, res) =>{
+    try{
+        const user = req.user.id;
+        const official = await User.findById(user);
+        if(!official){
+            return res.status(404).json({
+                success : false,
+                message : "Official not found",
+            })
+        } 
+        if(official.leaveStatus === "AVAILABLE"){
+            official.leaveStatus = "ON_LEAVE";
+        }
+        else{
+            official.leaveStatus = "AVAILABLE";
+        }
+        await official.save();
+        return res.status(200).json({
+            success: true,
+            message: `Leave status updated to ${official.leaveStatus}`,
+            leaveStatus: official.leaveStatus,
+            official
+        });
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({
+            success : false,
+            message : "Something went wrong while updating the status",
+            error : err.message,
+        })
+    }
+};
+
+exports.getOfficialProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const official = await User.findById(userId).populate("department");
+        if (!official) {
+            return res.status(404).json({
+                success: false,
+                message: "Official not found",
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: "Official profile fetched successfully",
+            official,
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching official profile",
+            error: err.message,
+        });
+    }
+};

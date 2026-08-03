@@ -3,7 +3,7 @@
   import { FileText, Clock, CheckCircle, Loader, X, AlertTriangle, Building, Filter, Bot, Sparkles } from "lucide-react"
   import StatusBadge from "../components/StatusBadge.jsx"
   import PriorityBadge from "../components/PriorityBadge.jsx"
-  import { assignComplainAPI, getAllComplainsAPI, getDashboardDataAPI } from "../Services/operation/complainAdminAPI.jsx"
+  import { assignComplainAPI, getAllComplainsAPI, getDashboardDataAPI, rejectComplainAPI } from "../Services/operation/complainAdminAPI.jsx"
 
   const PRIORITY_ORDER = {
     CRITICAL: 1,
@@ -20,6 +20,8 @@
   export default function AdminDashboard() {
     const [complaints, setComplaints] = useState([])
     const [modalComplaint, setModalComplaint] = useState(null)
+    const [rejectModalComplaint, setRejectModalComplaint] = useState(null)
+    const [rejectionReason, setRejectionReason] = useState("")
     const [official, setOfficial] = useState("")
     const [department, setDepartment] = useState("")
     const [officials, setOfficials] = useState([])
@@ -98,10 +100,23 @@
       setDepartment(complaint.department?._id || complaint.department || "")
     }
 
+    const openRejectModal = (complaint) => {
+      setRejectModalComplaint(complaint)
+      setRejectionReason("")
+    }
+
     const handleAssign = async (e) => {
       e.preventDefault()
       await assignComplainAPI(complain, department)
       setModalComplaint(null)
+      fetchAllComplaints()
+    }
+
+    const handleReject = async (e) => {
+      e.preventDefault()
+      if (!rejectionReason.trim()) return
+      await rejectComplainAPI(rejectModalComplaint._id, rejectionReason)
+      setRejectModalComplaint(null)
       fetchAllComplaints()
     }
 
@@ -208,13 +223,27 @@
                     <td className="px-4 py-3">
                       <StatusBadge status={c.status} />
                     </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => openModal(c)}
-                        className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
-                      >
-                        Assign
-                      </button>
+                    <td className="px-4 py-3 flex items-center gap-2">
+                      {c.status === "REJECTED" ? (
+                        <span className="text-xs font-medium text-red-600 italic">Rejected</span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => openModal(c)}
+                            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+                          >
+                            {c.status === "PENDING" ? "Assign" : "Reassign"}
+                          </button>
+                          {c.status === "PENDING" && (
+                            <button
+                              onClick={() => openRejectModal(c)}
+                              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 transition-colors"
+                            >
+                              Reject
+                            </button>
+                          )}
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -304,6 +333,56 @@
                   <button
                     type="button"
                     onClick={() => setModalComplaint(null)}
+                    className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Reject Modal */}
+        {rejectModalComplaint && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+            <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-red-600 flex items-center gap-2">
+                  <AlertTriangle size={18} /> Reject Complaint
+                </h2>
+                <button onClick={() => setRejectModalComplaint(null)} aria-label="Close">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-900">
+                <p className="font-mono text-slate-500 mb-1">{rejectModalComplaint._id}</p>
+                <p className="font-semibold text-sm text-foreground">{rejectModalComplaint.title}</p>
+              </div>
+
+              <form onSubmit={handleReject} className="flex flex-col gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Rejection Reason</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    placeholder="Specify why this complaint is being rejected..."
+                    className="w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-red-500"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  >
+                    Confirm Rejection
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRejectModalComplaint(null)}
                     className="rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-slate-100"
                   >
                     Cancel

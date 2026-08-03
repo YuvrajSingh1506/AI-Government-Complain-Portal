@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from "react"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { ArrowLeft, MapPin, Calendar, Building, User, Trash2, AlertCircle, Bot } from "lucide-react"
 import StatusBadge from "../components/StatusBadge.jsx"
 import PriorityBadge from "../components/PriorityBadge.jsx"
@@ -73,14 +73,24 @@ export default function ComplaintDetail() {
 
         <p className="mb-4 text-foreground">{complaint.description}</p>
 
-        {complaint.aiSummary && (
-          <div className="mb-6 rounded-md border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900 flex items-start gap-2">
-            <Bot size={18} className="text-purple-600 mt-0.5 shrink-0" />
+        {complaint.rejectionReason ? (
+          <div className="mb-6 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-900 flex items-start gap-2">
+            <AlertCircle size={18} className="text-red-600 mt-0.5 shrink-0" />
             <div>
-              <strong className="block text-xs font-semibold text-purple-800 uppercase tracking-wide">AI Summary</strong>
-              <p>{complaint.aiSummary}</p>
+              <strong className="block text-xs font-semibold text-red-800 uppercase tracking-wide">Rejection Reason</strong>
+              <p>{complaint.rejectionReason}</p>
             </div>
           </div>
+        ) : (
+          complaint.aiSummary && (
+            <div className="mb-6 rounded-md border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900 flex items-start gap-2">
+              <Bot size={18} className="text-purple-600 mt-0.5 shrink-0" />
+              <div>
+                <strong className="block text-xs font-semibold text-purple-800 uppercase tracking-wide">AI Summary</strong>
+                <p>{complaint.aiSummary}</p>
+              </div>
+            </div>
+          )
         )}
 
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

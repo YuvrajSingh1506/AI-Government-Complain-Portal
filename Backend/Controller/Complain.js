@@ -76,60 +76,81 @@ exports.createComplain = async(req, res) =>{
         }
 
         console.log("AI RESULT:", aiResult);
-
-           const selectedDepartment = departments.find(
+        // if(aiResult.isMatching === false){
+        //     return res.status(400).json({
+        //         success : false,
+        //         message : "Image and text do not match",
+                
+        //     })
+        // }
+        const selectedDepartment = {
+            _id: null
+        };
+        let assignedOfficialId = null;
+        let complaintStatus = "PENDING";
+        if(aiResult.isMatching == true){
+            const selectedDepartment = departments.find(
             (department) =>
                 department.name.toLowerCase() ===
                 aiResult.department.toLowerCase()
         );
 
-         if (!selectedDepartment) {
+            if (!selectedDepartment) {
+                return res.status(500).json({
+                    success: false,
+                    message: "AI returned an invalid department",
+                });
+            }
 
-            return res.status(500).json({
-                success: false,
-                message: "AI returned an invalid department",
+            // Automatically assign complaint to official in identified department with least complaints
+            const official = await User.findOne({
+                role: "Official",
+                department: selectedDepartment._id,
+                leaveStatus:"AVAILABLE"
+            }).sort({
+                assignComplainCount: 1,
             });
+
+           
+
+            if (official) {
+                assignedOfficialId = official._id;
+                complaintStatus = "ASSIGNED";
+                official.assignComplainCount += 1;
+                await official.save();
+            }
         }
 
-
-
-          const complaint = await Complain.create({
-
+        const complaint = await Complain.create({
             title,
             description,
             imageUrl,
-            citizen : user,
+            citizen: user,
             department: selectedDepartment._id,
             category: aiResult.category,
             priority: aiResult.priority,
-            status: "PENDING",
+            assignedOfficial: assignedOfficialId,
+            status: complaintStatus,
             location: {
-
                 latitude: latitude || null,
-
                 longitude: longitude || null,
-
                 address: address || "",
             },
             aiSummary: aiResult.summary,
         });
+
         return res.status(201).json({
-
             success: true,
-
-            message: "Complaint created successfully",
-
+            message: official
+                ? "Complaint created and automatically assigned to official"
+                : "Complaint created successfully (pending official assignment)",
             complain: complaint,
-
             aiAnalysis: {
-
                 category: aiResult.category,
-
                 priority: aiResult.priority,
-
                 department: selectedDepartment.name,
-
                 summary: aiResult.summary,
+                assignedOfficial: official ? official.name : "Not assigned",
             },
         });
 
@@ -137,7 +158,7 @@ exports.createComplain = async(req, res) =>{
         console.log(err);
         return res.status(500).json({
             success : false,
-            message : "Something went wrong while creating the complain",
+            message : err.message ||"Something went wrong while creating the complain",
             error : err.message,
         })
     }

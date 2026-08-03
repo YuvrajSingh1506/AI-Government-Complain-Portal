@@ -19,7 +19,9 @@ const {
 
 const {
     getAssignedComplain,
-    updateComplainStatus
+    updateComplainStatus,
+    updateLeaveStatus,
+    getOfficialProfile
 } = require("../Controller/ComplainOfficial");
 
 //Citizen routes
@@ -41,8 +43,8 @@ route.get("/getAllComplains", auth, isAdmin, getAllComplains);
 //Official routes
 route.put("/updateComplainStatus", auth, isOfficial, updateComplainStatus);
 route.get("/getAssignedComplain", auth, isOfficial, getAssignedComplain);
-
-
+route.put("/updateLeaveStatus", auth, isOfficial, updateLeaveStatus);
+route.get("/officialProfile", auth, isOfficial, getOfficialProfile);
 
 
 module.exports = route;

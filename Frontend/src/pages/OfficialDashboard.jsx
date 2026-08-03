@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
-import { Upload, X } from "lucide-react"
+import { Upload, X, Palmtree, CheckCircle2, Power } from "lucide-react"
 import { STATUSES } from "../data/mockData.js"
 import StatusBadge from "../components/StatusBadge.jsx"
-import { getAllOfficialComplain, updateComplainStatus } from "../Services/operation/officialAPI.jsx"
+import { getAllOfficialComplain, updateComplainStatus, updateLeaveStatusApi, getOfficialProfileApi } from "../Services/operation/officialAPI.jsx"
 
 export default function OfficialDashboard() {
   // Show complaints that have been assigned to an official (mock: all assigned ones).
@@ -12,14 +12,33 @@ export default function OfficialDashboard() {
   const [status, setStatus] = useState("")
   const [note, setNote] = useState("")
   const [file, setFile] = useState(null)
-  useEffect(()=>{
-      const fetchAllComplaints = async()=>{
-          const response = await getAllOfficialComplain();
-          console.log(response);
-          setComplaints(response);
+  const [officialProfile, setOfficialProfile] = useState(null)
+  const [leaveStatus, setLeaveStatus] = useState("AVAILABLE")
+  const [loadingLeave, setLoadingLeave] = useState(false)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await getAllOfficialComplain();
+      if (response) setComplaints(response);
+
+      const profile = await getOfficialProfileApi();
+      if (profile) {
+        setOfficialProfile(profile);
+        setLeaveStatus(profile.leaveStatus || "AVAILABLE");
       }
-      fetchAllComplaints();
-  },[]);
+    }
+    fetchData();
+  }, []);
+
+  const handleLeaveToggle = async () => {
+    setLoadingLeave(true);
+    const result = await updateLeaveStatusApi();
+    if (result && result.leaveStatus) {
+      setLeaveStatus(result.leaveStatus);
+    }
+    setLoadingLeave(false);
+  }
+
   const openModal = (complaint) => {
     setModalComplaint(complaint)
     setStatus(complaint.status)
@@ -57,7 +76,43 @@ export default function OfficialDashboard() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-foreground">Assigned Complaints</h1>
+      {/* Header & Leave Status Toggle */}
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Assigned Complaints</h1>
+          <p className="text-sm text-muted">
+            {officialProfile ? `${officialProfile.name} (${officialProfile.department?.name || 'Official'})` : 'Official Portal'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-4 rounded-lg border border-border/80 bg-slate-50 p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted">Duty Status:</span>
+            {leaveStatus === "ON_LEAVE" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 border border-amber-300">
+                <Palmtree size={14} /> On Leave
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 border border-emerald-300">
+                <CheckCircle2 size={14} /> Available
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleLeaveToggle}
+            disabled={loadingLeave}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs ${
+              leaveStatus === "ON_LEAVE"
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "bg-amber-600 hover:bg-amber-700 text-white"
+            } ${loadingLeave ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            <Power size={14} />
+            {leaveStatus === "ON_LEAVE" ? "Mark Available" : "Mark On Leave"}
+          </button>
+        </div>
+      </div>
 
       <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
         <table className="w-full text-left text-sm">

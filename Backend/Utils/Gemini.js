@@ -17,49 +17,68 @@ exports.analyzeComplaint = async({
             return `ID: ${department._id}, Name: ${department.name}, Description: ${department.description}`;
         }).join("\n");
 
-                const prompt = `
-                    You are an AI assistant for a Government Complaint Portal.
+                
+                    const prompt = `
+                        You are an AI assistant for a Government Complaint Portal.
 
-                    Analyze the citizen's complaint using BOTH:
-                    1. Complaint text
-                    2. Complaint image
+                        Analyze the complaint using BOTH:
 
-                    Your job is to determine:
+                        1. Complaint text
+                        2. Complaint image
 
-                    1. Category
-                    2. Priority
-                    3. Most appropriate government department
-                    4. Short summary
+                        IMPORTANT:
 
-                    IMPORTANT RULES:
+                        - Never ignore the image.
+                        - Never ignore the text.
+                        - First analyze the image independently.
+                        - Then analyze the complaint text independently.
+                        - Compare both analyses.
+                        - Determine whether they describe the SAME issue.
 
-                    - You MUST select the department from the provided department list.
-                    - Do NOT invent a department.
-                    - Return the exact department name from the list.
-                    - Priority must be exactly one of:
-                    LOW
-                    MEDIUM
-                    HIGH
-                    CRITICAL
+                        If the image and text describe different issues:
 
-                    Complaint Title:
-                    ${title}
+                        - Set "isMatching" to false.
+                        - Add a warning.
+                        - Still classify the complaint primarily using the complaint text.
+                        - Reduce confidence.
 
-                    Complaint Description:
-                    ${description}
+                        Available Departments:
 
-                    Available Departments:
-                    ${departmentList}
+                        ${departmentList}
 
-                    Return ONLY valid JSON in this format:
+                        Complaint Title:
+                        ${title}
 
-                    {
-                        "category": "string",
-                        "priority": "LOW | MEDIUM | HIGH | CRITICAL",
-                        "department": "exact department name from the provided list",
-                        "summary": "short summary of the complaint"
-                    }
-                    `;
+                        Complaint Description:
+                        ${description}
+
+                        Department Rules:
+
+                        - Select ONLY from the department list.
+                        - Never invent departments.
+
+                        Priority must be exactly:
+
+                        LOW
+                        MEDIUM
+                        HIGH
+                        CRITICAL
+
+                        Return ONLY valid JSON.
+
+                        {
+                            "imageCategory":"",
+                            "textCategory":"",
+                            "isMatching":true,
+                            "confidence":95,
+                            "warning":"",
+                            "category":"",
+                            "priority":"",
+                            "department":"",
+                            "summary":""
+                        }
+                        `;
+                    
         const parts = [
             {
                 text : prompt,

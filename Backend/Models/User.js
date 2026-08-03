@@ -26,6 +26,11 @@ const userSchema = new  mongoose.Schema({
         ref : "Department",
         default : null,
     },
+    leaveStatus: {
+        type: String,
+        enum: ["AVAILABLE", "ON_LEAVE"],
+        default: "AVAILABLE",
+    },
 },
 {timestamps : true}
 );

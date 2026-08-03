@@ -34,7 +34,8 @@ exports.assignComplain = async(req,res) =>{
         }
         const official = await User.findOne({
             role: "Official",
-            department: departmentId
+            department: departmentId,
+            leaveStatus: { $ne: "ON_LEAVE" }
         })
         .sort({
             assignComplainCount: 1

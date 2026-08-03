@@ -11,12 +11,15 @@ export const complainEndpoints = {
     DELETE_COMPLAIN_API : `${BASE_URL}complain/deleteMyComplains`,
     GET_ALL_COMPLAIN_API : `${BASE_URL}complain/getAllComplains`,
     GET_DASHBOARD_DATA_API : `${BASE_URL}complain/getDashboardData`,
-    ASSIGN_COMPLAIN_API : `${BASE_URL}complain/assignComplain`
+    ASSIGN_COMPLAIN_API : `${BASE_URL}complain/assignComplain`,
+    REJECT_COMPLAIN_API : `${BASE_URL}complain/rejectComplain`
 }
 export const departmentEndpoints = {
     GET_ALL_DEPARTMENT_API : `${BASE_URL}dept/getAllDepartment`
 }
 export const officialEndpoints = {
     GET_ALL_OFFICIAL_COMPLAIN_API : `${BASE_URL}complain/getAssignedComplain`,
-    UPDATE_COMPLAIN_API : `${BASE_URL}complain/updateComplainStatus`
+    UPDATE_COMPLAIN_API : `${BASE_URL}complain/updateComplainStatus`,
+    UPDATE_LEAVE_STATUS_API : `${BASE_URL}complain/updateLeaveStatus`,
+    GET_OFFICIAL_PROFILE_API : `${BASE_URL}complain/officialProfile`
 }
