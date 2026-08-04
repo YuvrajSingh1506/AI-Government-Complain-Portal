@@ -1,8 +1,7 @@
 const Complain = require("../Models/Complain");
 const Department = require("../Models/Department");
 const User = require("../Models/User");
-const { analyzeComplaint } = require("../Utils/Gemini");
-// const Department = require("../Models/Department");
+const { complaintQueue } = require("../Queue/complaintQueue");
 require("dotenv").config();
 const {uploadImageToCloudinary} = require("../Utils/Image_Uploader");
 exports.createComplain = async(req, res) =>{
@@ -29,129 +28,42 @@ exports.createComplain = async(req, res) =>{
                 message : "User not exists"
             })
         }   
-         const departments = await Department.find({});
-
-        if (!departments || departments.length === 0) {
-
-            return res.status(400).json({
-                success: false,
-                message: "No departments are available",
-            });
-        }
+        
         let imageUrl = [];
         const image = await uploadImageToCloudinary(file, process.env.FOLDER_NAME);
         imageUrl.push(image.secure_url);
 
-         let aiResult = null;
-
-        if (file) {
-
-            aiResult = await analyzeComplaint({
-
-                title,
-
-                description,
-
-                imagePath: file.tempFilePath,
-
-                imageMimeType: file.mimetype,
-
-                departments,
-            });
-
-        } else {
-
-            aiResult = await analyzeComplaint({
-
-                title,
-
-                description,
-
-                imagePath: null,
-
-                imageMimeType: null,
-
-                departments,
-            });
-        }
-
-        console.log("AI RESULT:", aiResult);
-        // if(aiResult.isMatching === false){
-        //     return res.status(400).json({
-        //         success : false,
-        //         message : "Image and text do not match",
-                
-        //     })
-        // }
-        const selectedDepartment = {
-            _id: null
-        };
-        let assignedOfficialId = null;
-        let complaintStatus = "PENDING";
-        if(aiResult.isMatching == true){
-            const selectedDepartment = departments.find(
-            (department) =>
-                department.name.toLowerCase() ===
-                aiResult.department.toLowerCase()
-        );
-
-            if (!selectedDepartment) {
-                return res.status(500).json({
-                    success: false,
-                    message: "AI returned an invalid department",
-                });
-            }
-
-            // Automatically assign complaint to official in identified department with least complaints
-            const official = await User.findOne({
-                role: "Official",
-                department: selectedDepartment._id,
-                leaveStatus:"AVAILABLE"
-            }).sort({
-                assignComplainCount: 1,
-            });
-
-           
-
-            if (official) {
-                assignedOfficialId = official._id;
-                complaintStatus = "ASSIGNED";
-                official.assignComplainCount += 1;
-                await official.save();
-            }
-        }
+         
 
         const complaint = await Complain.create({
             title,
             description,
             imageUrl,
             citizen: user,
-            department: selectedDepartment._id,
-            category: aiResult.category,
-            priority: aiResult.priority,
-            assignedOfficial: assignedOfficialId,
-            status: complaintStatus,
+            department: null,
+            category: null,
+            priority: null,
+            assignedOfficial: null,
+            status: "PENDING",
             location: {
                 latitude: latitude || null,
                 longitude: longitude || null,
                 address: address || "",
             },
-            aiSummary: aiResult.summary,
+           
         });
 
-        return res.status(201).json({
+        await complaintQueue.add(
+            "analyzeComplaint",
+            {
+                complaintId: complaint._id,
+            }
+        );
+         return res.status(201).json({
             success: true,
-            message: official
-                ? "Complaint created and automatically assigned to official"
-                : "Complaint created successfully (pending official assignment)",
+            message:
+                "Complaint submitted successfully and is being processed.",
             complain: complaint,
-            aiAnalysis: {
-                category: aiResult.category,
-                priority: aiResult.priority,
-                department: selectedDepartment.name,
-                summary: aiResult.summary,
-                assignedOfficial: official ? official.name : "Not assigned",
-            },
         });
 
     }catch(err){

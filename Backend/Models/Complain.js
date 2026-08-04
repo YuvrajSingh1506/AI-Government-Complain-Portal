@@ -68,6 +68,7 @@ const complainSchema = mongoose.Schema(
             type: String,
             enum: [
                 "PENDING",
+                "ADMIN_REVIEW",
                 "ASSIGNED",
                 "IN_PROGRESS",
                 "RESOLVED",

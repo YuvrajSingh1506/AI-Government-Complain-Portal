@@ -9,7 +9,9 @@ const userRoutes = require("./Routes/User");
 const deptRoutes = require("./Routes/Department");
 const complainRoutes = require("./Routes/Complain");
 const cors = require("cors");
-const { connectRedis } = require("./Config/redis");
+
+const { connectRedisCache } = require("./Config/redisCache");
+// const { connectRedisQueue } = require("./Config/redisQueue");
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
@@ -41,4 +43,7 @@ dbConnect();
 
 cloudinaryConnect();
 
-connectRedis();
+connectRedisCache();
+
+// Initialize BullMQ complaint worker
+require("./Worker/compliantWorker");

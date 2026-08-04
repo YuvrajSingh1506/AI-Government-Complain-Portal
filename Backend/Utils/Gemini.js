@@ -1,120 +1,133 @@
-const {GoogleGenAI} = require("@google/genai");
-const fs = require("fs");
+const { GoogleGenAI } = require("@google/genai");
+const axios = require("axios");
+
 const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
-})
+});
 
-
-exports.analyzeComplaint = async({
+exports.analyzeComplaint = async ({
     title,
     description,
-    imagePath,
-    imageMimeType,
+    imageUrl,
     departments,
-})=>{
-    try{
-        const departmentList = departments.map((department)=>{
-            return `ID: ${department._id}, Name: ${department.name}, Description: ${department.description}`;
-        }).join("\n");
+}) => {
+    try {
 
-                
-                    const prompt = `
-                        You are an AI assistant for a Government Complaint Portal.
+        const departmentList = departments
+            .map((department) => {
+                return `ID: ${department._id}, Name: ${department.name}, Description: ${department.description}`;
+            })
+            .join("\n");
 
-                        Analyze the complaint using BOTH:
+        const prompt = `
+            You are an AI assistant for a Government Complaint Portal.
 
-                        1. Complaint text
-                        2. Complaint image
+            Analyze the complaint using BOTH:
 
-                        IMPORTANT:
+            1. Complaint text
+            2. Complaint image
 
-                        - Never ignore the image.
-                        - Never ignore the text.
-                        - First analyze the image independently.
-                        - Then analyze the complaint text independently.
-                        - Compare both analyses.
-                        - Determine whether they describe the SAME issue.
+            IMPORTANT:
 
-                        If the image and text describe different issues:
+            - Never ignore the image.
+            - Never ignore the text.
+            - First analyze the image independently.
+            - Then analyze the complaint text independently.
+            - Compare both analyses.
+            - Determine whether they describe the SAME issue.
 
-                        - Set "isMatching" to false.
-                        - Add a warning.
-                        - Still classify the complaint primarily using the complaint text.
-                        - Reduce confidence.
+            If the image and text describe different issues:
 
-                        Available Departments:
+            - Set "isMatching" to false.
+            - Set confidence below 50.
+            - Add a warning.
+            - Classify the complaint using the complaint text only.
 
-                        ${departmentList}
+            Available Departments:
 
-                        Complaint Title:
-                        ${title}
+            ${departmentList}
 
-                        Complaint Description:
-                        ${description}
+            Complaint Title:
+            ${title}
 
-                        Department Rules:
+            Complaint Description:
+            ${description}
 
-                        - Select ONLY from the department list.
-                        - Never invent departments.
+            Department Rules:
 
-                        Priority must be exactly:
+            - Select ONLY from the department list.
+            - Never invent departments.
 
-                        LOW
-                        MEDIUM
-                        HIGH
-                        CRITICAL
+            Priority must be exactly one of:
 
-                        Return ONLY valid JSON.
+            LOW
+            MEDIUM
+            HIGH
+            CRITICAL
 
-                        {
-                            "imageCategory":"",
-                            "textCategory":"",
-                            "isMatching":true,
-                            "confidence":95,
-                            "warning":"",
-                            "category":"",
-                            "priority":"",
-                            "department":"",
-                            "summary":""
-                        }
-                        `;
-                    
+            Return ONLY valid JSON.
+
+            {
+                "imageCategory": "",
+                "textCategory": "",
+                "isMatching": true,
+                "confidence": 95,
+                "warning": "",
+                "category": "",
+                "priority": "",
+                "department": "",
+                "summary": ""
+            }
+            `;
+
         const parts = [
             {
-                text : prompt,
+                text: prompt,
             },
         ];
-         if (imagePath && fs.existsSync(imagePath)) {
 
-            const imageData = fs.readFileSync(imagePath);
+        if (imageUrl) {
+
+            const imageResponse = await axios.get(imageUrl, {
+                responseType: "arraybuffer",
+            });
+
+            const mimeType =
+                imageResponse.headers["content-type"] || "image/jpeg";
+
+            const imageData = Buffer.from(imageResponse.data);
 
             parts.push({
                 inlineData: {
-                    mimeType: imageMimeType || "image/jpeg",
+                    mimeType,
                     data: imageData.toString("base64"),
                 },
             });
         }
-        const response = await ai.models.generateContent({
+
+        const geminiResponse = await ai.models.generateContent({
             model: "gemini-3.5-flash-lite",
-            contents:[
+            contents: [
                 {
-                    role : "user",
+                    role: "user",
                     parts,
                 },
             ],
-            config:{
-                responseMimeType:"application/json",
+            config: {
+                responseMimeType: "application/json",
             },
         });
-        const text = response.text;
-        console.log("Gemini Response : ",text);
-        const result = JSON.parse(text);
-        return result;
-    }catch(err){
+
+        const text = geminiResponse.text;
+
+        console.log("Gemini Response:", text);
+
+        return JSON.parse(text);
+
+    } catch (err) {
 
         console.error("Gemini AI Error:", err);
 
         throw new Error("Failed to analyze complaint using AI");
     }
-}
+};

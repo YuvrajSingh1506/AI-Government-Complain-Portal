@@ -3,20 +3,20 @@ const User = require("../Models/User");
 const Department = require("../Models/Department");
 const { getCache, setCache } = require("../Utils/cacheServices");
 
-exports.assignComplain = async(req,res) =>{
-    try{
-        const {complainId, departmentId} = req.body;
-        if(!complainId || !departmentId){
+exports.assignComplain = async (req, res) => {
+    try {
+        const { complainId, departmentId } = req.body;
+        if (!complainId || !departmentId) {
             return res.status(400).json({
-                success : false,
-                message : "All fields are required",
+                success: false,
+                message: "All fields are required",
             })
         }
         const complain = await Complain.findById(complainId);
-        if(!complain){
+        if (!complain) {
             return res.status(400).json({
-                success : false,
-                message : "Complain not found, please try again",
+                success: false,
+                message: "Complain not found, please try again",
             })
         }
         if (complain.status !== "PENDING") {
@@ -26,10 +26,10 @@ exports.assignComplain = async(req,res) =>{
             });
         }
         const departmentDetail = await Department.findById(departmentId);
-        if(!departmentDetail){
+        if (!departmentDetail) {
             return res.status(400).json({
-                success : false,
-                meesage : "Department doesn't exists",
+                success: false,
+                meesage: "Department doesn't exists",
             })
         }
         const official = await User.findOne({
@@ -37,15 +37,15 @@ exports.assignComplain = async(req,res) =>{
             department: departmentId,
             leaveStatus: { $ne: "ON_LEAVE" }
         })
-        .sort({
-            assignComplainCount: 1
-        });
-        if(!official){
-            return res.status(404).json({
-                success:false,
-                message:"No official found for this department"
+            .sort({
+                assignComplainCount: 1
             });
-            }
+        if (!official) {
+            return res.status(404).json({
+                success: false,
+                message: "No official found for this department"
+            });
+        }
         complain.assignedOfficial = official._id;
 
         complain.department = departmentId;
@@ -59,7 +59,7 @@ exports.assignComplain = async(req,res) =>{
             complaint: complain,
             assignedOfficial: official,
         });
-    }catch(err){
+    } catch (err) {
         console.log(err);
 
         return res.status(500).json({
@@ -117,26 +117,26 @@ exports.rejectComplain = async (req, res) => {
         });
     }
 };
-exports.getComplainData = async(req, res) =>{
-    try{
+exports.getComplainData = async (req, res) => {
+    try {
         const cacheKey = "admin:dashboard";
 
         const cachedData = await getCache(cacheKey);
-        if(cachedData){
+        if (cachedData) {
             // console.log("from redis");
             return res.status(200).json({
-                success : true,
-                message : "All data fetch successfully",
-                dashboard : JSON.parse(cachedData),
+                success: true,
+                message: "All data fetch successfully",
+                dashboard: JSON.parse(cachedData),
             })
         }
         const totalDepartment = await Department.find();
 
         const totalOfficial = await User.find({
-            role : "Official"
+            role: "Official"
         }).populate("department");
         const totalUser = await User.find({
-            role : "Citizen"
+            role: "Citizen"
         }).populate("department");
 
         const dashboard = {
@@ -147,38 +147,38 @@ exports.getComplainData = async(req, res) =>{
         await setCache(cacheKey, dashboard, 600);
 
         return res.status(200).json({
-            success : true,
-            message : "All data fetch successfully",
+            success: true,
+            message: "All data fetch successfully",
             dashboard,
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : "Something went wrong while fetching admin dashboard data",
-            error : err.message,
+            success: false,
+            message: "Something went wrong while fetching admin dashboard data",
+            error: err.message,
         })
     }
 }
 
-exports.getAllComplains = async(req, res) =>{
-    try{
+exports.getAllComplains = async (req, res) => {
+    try {
         const complains = await Complain.find()
-        .populate("citizen")
-        .populate("department")
-        .populate("assignedOfficial")
-        .sort({createdAt : -1})
+            .populate("citizen")
+            .populate("department")
+            .populate("assignedOfficial")
+            .sort({ createdAt: -1 })
         return res.status(200).json({
-            success:true,
-            message:"All complaints fetched successfully",
+            success: true,
+            message: "All complaints fetched successfully",
             complains,
         });
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message :"Something went wrong while fetching detail of all complain",
-            error : err.message,
+            success: false,
+            message: "Something went wrong while fetching detail of all complain",
+            error: err.message,
         })
     }
 }

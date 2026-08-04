@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "client": "vite",
-    "server": "cd server && npm run dev",
+    "server": "cd ../Backend && npm run dev",
     "dev": "concurrently -n \"client,server\" -c \"bgBlue,bgYellow\" \"npm run client\" \"npm run server\"",
     "build": "vite build",
     "preview": "vite preview",

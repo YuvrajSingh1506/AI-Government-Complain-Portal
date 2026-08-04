@@ -1,9 +1,9 @@
-const {redisClient} = require("../Config/redis");
+const {redisClientCache} = require("../Config/redisCache");
 
 
 const getCache = async(key)=>{
     try{
-        return await redisClient.get(key);
+        return await redisClientCache.get(key);
     }catch(err){
         console.error("Redis GET Error:", err.message);
         return null;
@@ -12,7 +12,7 @@ const getCache = async(key)=>{
 
 const setCache = async( key, value, ttl) =>{
     try{
-        await redisClient.setEx(
+        await redisClientCache.setEx(
             key,
             ttl,
             JSON.stringify(value),
@@ -24,9 +24,9 @@ const setCache = async( key, value, ttl) =>{
 
 const deleteCache = async(key)=>{
     try{
-        await redisClient.del(key);
+        await redisClientCache.del(key);
     }catch(err){
-        console.error("Redis DELETE Error:", error.message);
+        console.error("Redis DELETE Error:", err.message);
     }
 }
 
