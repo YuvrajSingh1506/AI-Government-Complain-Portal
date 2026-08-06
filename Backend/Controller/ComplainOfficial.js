@@ -1,6 +1,7 @@
+const { getIO } = require("../Config/socketManager");
 const Complain = require("../Models/Complain");
 const User = require("../Models/User");
-const {uploadImageToCloudinary}=require("../Utils/Image_Uploader");
+const { uploadImageToCloudinary } = require("../Utils/Image_Uploader");
 exports.getAssignedComplain = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -8,9 +9,9 @@ exports.getAssignedComplain = async (req, res) => {
         const complain = await Complain.find({
             assignedOfficial: userId,
         })
-        .populate("citizen")
-        .populate("department")
-        .sort({ createdAt: -1 });
+            .populate("citizen")
+            .populate("department")
+            .sort({ createdAt: -1 });
 
         return res.status(200).json({
             success: true,
@@ -113,10 +114,24 @@ exports.updateComplainStatus = async (req, res) => {
 
         await complain.save();
 
-        const updatedComplaint = await Complain.findById(complainId)
-            .populate("department")
-            .populate("assignedOfficial", "name email department");
-
+        const updatedComplaint = await Complain.findById(complain._id)
+                       .populate("citizen")
+                       .populate("department")
+                       .populate("assignedOfficial");
+        const io = getIO();
+        if (io) {
+            io.to(complain.citizen.toString()).emit(
+                "complainStatusUpdated",
+                {
+                    complaint: updatedComplaint
+                }
+            )
+            io.to("admins").emit(
+                "adminComplaintStatusUpdated",
+                updatedComplaint
+            );
+        }
+        
         return res.status(200).json({
             success: true,
             message: "Complaint status updated successfully",
@@ -134,20 +149,20 @@ exports.updateComplainStatus = async (req, res) => {
     }
 };
 
-exports.updateLeaveStatus = async(req, res) =>{
-    try{
+exports.updateLeaveStatus = async (req, res) => {
+    try {
         const user = req.user.id;
         const official = await User.findById(user);
-        if(!official){
+        if (!official) {
             return res.status(404).json({
-                success : false,
-                message : "Official not found",
+                success: false,
+                message: "Official not found",
             })
-        } 
-        if(official.leaveStatus === "AVAILABLE"){
+        }
+        if (official.leaveStatus === "AVAILABLE") {
             official.leaveStatus = "ON_LEAVE";
         }
-        else{
+        else {
             official.leaveStatus = "AVAILABLE";
         }
         await official.save();
@@ -157,12 +172,12 @@ exports.updateLeaveStatus = async(req, res) =>{
             leaveStatus: official.leaveStatus,
             official
         });
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : "Something went wrong while updating the status",
-            error : err.message,
+            success: false,
+            message: "Something went wrong while updating the status",
+            error: err.message,
         })
     }
 };

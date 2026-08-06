@@ -9,9 +9,11 @@ const userRoutes = require("./Routes/User");
 const deptRoutes = require("./Routes/Department");
 const complainRoutes = require("./Routes/Complain");
 const cors = require("cors");
-
 const { connectRedisCache } = require("./Config/redisCache");
-// const { connectRedisQueue } = require("./Config/redisQueue");
+const http = require("http");
+const { Server } = require("socket.io");
+const initializeSocket = require("./Socket/socket");
+const { setIO } = require("./Config/socketManager");
 const app = express();
 app.use(cookieParser());
 app.use(express.json());
@@ -23,11 +25,19 @@ app.use(
 );
 app.use(
     cors({
-        origin:"http://localhost:3000",
-        credentials : true,
+        origin:process.env.FRONTEND_URL,
     })
 )
-app.listen(PORT,()=>{
+
+const server = http.createServer(app);
+const io = new Server(server,{
+    cors:{
+        origin : process.env.FRONTEND_URL,
+    }
+})
+setIO(io);
+initializeSocket(io);
+server.listen(PORT,()=>{
     console.log(`App is listen on ${PORT}`);
 })
 app.get("/", (req, res) => {

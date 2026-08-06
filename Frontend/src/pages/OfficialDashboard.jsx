@@ -4,7 +4,8 @@ import { Upload, X, Palmtree, CheckCircle2, Power } from "lucide-react"
 import { STATUSES } from "../data/mockData.js"
 import StatusBadge from "../components/StatusBadge.jsx"
 import { getAllOfficialComplain, updateComplainStatus, updateLeaveStatusApi, getOfficialProfileApi } from "../Services/operation/officialAPI.jsx"
-
+import socket from "../Socket/socket.js"
+import toast from "react-hot-toast"
 export default function OfficialDashboard() {
   // Show complaints that have been assigned to an official (mock: all assigned ones).
   const [complaints, setComplaints] = useState([]);
@@ -29,7 +30,30 @@ export default function OfficialDashboard() {
     }
     fetchData();
   }, []);
+  useEffect(() => {
 
+    //  console.log("Socket Connected:", socket.connected);
+    // console.log("Socket ID:", socket.id);
+
+    // socket.on("connect", () => {
+    //     console.log("Connected Again:", socket.id);
+    // });
+
+    socket.on("newComplaintAssigned", (data) => {
+      console.log("EVENT RECEIVED");
+      toast.success("New complaint receive: ", data.complaint._id);
+      setComplaints((prev) => [
+        data.complaint,
+        ...prev,
+      ])
+    });
+
+    return () => {
+      socket.off("connect");
+      socket.off("newComplaintAssigned");
+    };
+
+  }, []);
   const handleLeaveToggle = async () => {
     setLoadingLeave(true);
     const result = await updateLeaveStatusApi();
@@ -47,32 +71,32 @@ export default function OfficialDashboard() {
   }
 
   const handleUpdate = async (e) => {
-      e.preventDefault();
+    e.preventDefault();
 
-      const formData = new FormData();
+    const formData = new FormData();
 
-      formData.append("complainId", modalComplaint._id);
-      formData.append("currentStatus", status);
-      formData.append("resolutionNote", note);
+    formData.append("complainId", modalComplaint._id);
+    formData.append("currentStatus", status);
+    formData.append("resolutionNote", note);
 
-      if (file) {
-        formData.append("resolutionImage", file);
-      }
+    if (file) {
+      formData.append("resolutionImage", file);
+    }
 
-      // Call your API
-      await updateComplainStatus(formData);
+    // Call your API
+    await updateComplainStatus(formData);
 
 
-        // Refresh complaints
-        const updated = await getAllOfficialComplain();
-        setComplaints(updated);
+    // Refresh complaints
+    const updated = await getAllOfficialComplain();
+    setComplaints(updated);
 
-        setModalComplaint(null);
-        setFile(null);
-        setNote("");
-        setStatus("");
-  
-    };
+    setModalComplaint(null);
+    setFile(null);
+    setNote("");
+    setStatus("");
+
+  };
 
   return (
     <div>
@@ -102,11 +126,10 @@ export default function OfficialDashboard() {
           <button
             onClick={handleLeaveToggle}
             disabled={loadingLeave}
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs ${
-              leaveStatus === "ON_LEAVE"
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors shadow-xs ${leaveStatus === "ON_LEAVE"
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
                 : "bg-amber-600 hover:bg-amber-700 text-white"
-            } ${loadingLeave ? "opacity-50 cursor-not-allowed" : ""}`}
+              } ${loadingLeave ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             <Power size={14} />
             {leaveStatus === "ON_LEAVE" ? "Mark Available" : "Mark On Leave"}
@@ -141,16 +164,16 @@ export default function OfficialDashboard() {
                 </td>
                 <td className="px-4 py-3">
                   {
-                    c.status !== "RESOLVED"?(
+                    c.status !== "RESOLVED" ? (
                       <button
-                    onClick={() => openModal(c)}
-                    className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
-                  >
-                    Update Status
-                  </button>
-                    ):(
+                        onClick={() => openModal(c)}
+                        className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:opacity-90"
+                      >
+                        Update Status
+                      </button>
+                    ) : (
                       <button
-                       className="rounded-md  bg-primary px-3 py-1 text-xs font-medium text-primary-foreground ">
+                        className="rounded-md  bg-primary px-3 py-1 text-xs font-medium text-primary-foreground ">
                         Completed
                       </button>
                     )
@@ -213,16 +236,16 @@ export default function OfficialDashboard() {
                   <Upload size={18} />
                   <span>{file?.name || "Click to upload an image"}</span>
                   <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const selectedFile = e.target.files[0];
-                        if (selectedFile) {
-                          setFile(selectedFile);
-                        }
-                      }}
-                    />
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const selectedFile = e.target.files[0];
+                      if (selectedFile) {
+                        setFile(selectedFile);
+                      }
+                    }}
+                  />
                 </label>
               </div>
               <div className="flex gap-3">

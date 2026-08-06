@@ -4,6 +4,8 @@
   import StatusBadge from "../components/StatusBadge.jsx"
   import PriorityBadge from "../components/PriorityBadge.jsx"
   import { assignComplainAPI, getAllComplainsAPI, getDashboardDataAPI, rejectComplainAPI } from "../Services/operation/complainAdminAPI.jsx"
+import toast from "react-hot-toast"
+import socket from "../Socket/socket.js"
 
   const PRIORITY_ORDER = {
     CRITICAL: 1,
@@ -47,7 +49,47 @@
       fetchAllComplaints()
       fetchAllData()
     }, [])
+    useEffect(()=>{
+      const handleNewComplaint = (data) =>{
+        console.log(data);
+          setComplaints((prev)=>[
+            data.complain,
+            ...prev
+          ])
+          toast.success("New Complaint Received");
 
+      };
+       const handleComplaintUpdate = (updatedComplaint) => {
+
+        setComplaints((prev) =>
+            prev.map((complaint) =>
+                complaint._id === updatedComplaint._id
+                    ? updatedComplaint
+                    : complaint
+            )
+        );
+        toast.success(updatedComplaint._id, " Status updated to ", updatedComplaint.status);
+
+    };
+      socket.on(
+        "newComplaintCreated",
+        handleNewComplaint
+      );
+      socket.on(
+        "adminComplaintStatusUpdated",
+        handleComplaintUpdate
+    );
+      return ()=>{
+          socket.off(
+              "newComplaintCreated",
+              handleNewComplaint
+          )
+          socket.off(
+            "adminComplaintStatusUpdated",
+            handleComplaintUpdate
+        );
+      }
+    },[])
     const filteredComplaints = useMemo(() => {
       let list = [...complaints]
 

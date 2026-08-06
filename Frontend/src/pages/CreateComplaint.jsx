@@ -3,46 +3,49 @@ import { useNavigate } from "react-router-dom"
 import { Upload } from "lucide-react"
 import { createComplainApi } from "../Services/operation/complainAPI"
 import toast from "react-hot-toast"
+
 export default function CreateComplaint() {
   const navigate = useNavigate()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [address, setAddress] = useState("")
-  const [fileName, setFileName] = useState(null);
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
-  const [imagePreview, setImagePreview] = useState("");
-  useEffect(()=>{
-    getLocation();
-  },[]);
-  const getLocation = ()=>{
-    if(!navigator.geolocation){
-      toast.error("Geolocation is not supported");
-        return;
+  const [fileName, setFileName] = useState(null)
+  const [imagePreview, setImagePreview] = useState("")
+  const [latitude, setLatitude] = useState("")
+  const [longitude, setLongitude] = useState("")
+
+  useEffect(() => {
+    getLocation()
+  }, [])
+
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Geolocation is not supported")
+      return
     }
     navigator.geolocation.getCurrentPosition(
-      (position)=>{
-        setLatitude(position.coords.latitude);
-        setLongitude(position.coords.longitude);
+      (position) => {
+        setLatitude(position.coords.latitude)
+        setLongitude(position.coords.longitude)
       },
       (error) => {
-      console.log(error);
-      toast.error("Unable to fetch location");
+        console.log(error)
+        toast.error("Unable to fetch location")
       }
     )
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // Mock submission only — wire this up to your Express backend later.
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("address", address);
-    formData.append("image", fileName);
-    formData.append("latitude",latitude);
-    formData.append("longitude",longitude);
-    const response = await createComplainApi(formData);
-    if(response){
+    const formData = new FormData()
+    formData.append("title", title)
+    formData.append("description", description)
+    formData.append("address", address)
+    formData.append("image", fileName)
+    formData.append("latitude", latitude)
+    formData.append("longitude", longitude)
+    const response = await createComplainApi(formData)
+    if (response) {
       navigate("/dashboard")
     }
   }
@@ -100,22 +103,22 @@ export default function CreateComplaint() {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e)=>{
-                const file = e.target.files[0];
-                if(file){
-                  setFileName(file);
+              onChange={(e) => {
+                const file = e.target.files[0]
+                if (file) {
+                  setFileName(file)
                   setImagePreview(URL.createObjectURL(file))
                 }
               }}
             />
           </label>
-            {imagePreview && (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="mt-3 h-64  rounded-md border object-cover"
-              />
-            )}
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="mt-3 h-64 rounded-md border object-cover"
+            />
+          )}
         </div>
 
         <div className="flex gap-3">

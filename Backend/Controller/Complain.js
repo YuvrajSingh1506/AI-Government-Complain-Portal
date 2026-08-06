@@ -3,37 +3,37 @@ const Department = require("../Models/Department");
 const User = require("../Models/User");
 const { complaintQueue } = require("../Queue/complaintQueue");
 require("dotenv").config();
-const {uploadImageToCloudinary} = require("../Utils/Image_Uploader");
-exports.createComplain = async(req, res) =>{
-    try{
+const { uploadImageToCloudinary } = require("../Utils/Image_Uploader");
+exports.createComplain = async (req, res) => {
+    try {
         const file = req.files?.image;
-        const {title, description, longitude, latitude, address} = req.body;
+        const { title, description, longitude, latitude, address } = req.body;
         const user = req.user.id;
-        if(!file || !title || !description || !latitude || !longitude || !address){
-                return res.status(400).json({
-                    success:false,
-                    message:"All fields are required"
-                });
-        }
-        if(isNaN(latitude) || isNaN(longitude)){
+        if (!file || !title || !description || !latitude || !longitude || !address) {
             return res.status(400).json({
-                success:false,
-                message:"Invalid latitude or longitude"
+                success: false,
+                message: "All fields are required"
+            });
+        }
+        if (isNaN(latitude) || isNaN(longitude)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid latitude or longitude"
             });
         }
         const existingUser = await User.findById(user);
-        if(!existingUser){
+        if (!existingUser) {
             return res.status(404).json({
-                success : false,
-                message : "User not exists"
+                success: false,
+                message: "User not exists"
             })
-        }   
-        
+        }
+
         let imageUrl = [];
         const image = await uploadImageToCloudinary(file, process.env.FOLDER_NAME);
         imageUrl.push(image.secure_url);
 
-         
+
 
         const complaint = await Complain.create({
             title,
@@ -50,7 +50,7 @@ exports.createComplain = async(req, res) =>{
                 longitude: longitude || null,
                 address: address || "",
             },
-           
+
         });
 
         await complaintQueue.add(
@@ -59,53 +59,53 @@ exports.createComplain = async(req, res) =>{
                 complaintId: complaint._id,
             }
         );
-         return res.status(201).json({
+        return res.status(201).json({
             success: true,
             message:
                 "Complaint submitted successfully and is being processed.",
             complain: complaint,
         });
 
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : err.message ||"Something went wrong while creating the complain",
-            error : err.message,
+            success: false,
+            message: err.message || "Something went wrong while creating the complain",
+            error: err.message,
         })
     }
 }
 
-exports.getComplainDetail = async(req, res) =>{
-    try{
-        const {complainId} = req.params;
-        if(!complainId){
+exports.getComplainDetail = async (req, res) => {
+    try {
+        const { complainId } = req.params;
+        if (!complainId) {
             return res.status(400).json({
-                success : false,
-                message : "All fields are required",
+                success: false,
+                message: "All fields are required",
             })
         }
         const complain = await Complain.findById(complainId)
-                .populate("citizen")
-                .populate("department")
-                .populate("assignedOfficial");;
-        if(!complain){
+            .populate("citizen")
+            .populate("department")
+            .populate("assignedOfficial");;
+        if (!complain) {
             return res.status(404).json({
                 success: false,
                 message: "Complaint not found",
             });
         }
         return res.status(200).json({
-            success : true,
-            message : "Complain data fetch successfully",
+            success: true,
+            message: "Complain data fetch successfully",
             complain,
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : "Something went wrong while fetching complain data",
-            error : err.message,
+            success: false,
+            message: "Something went wrong while fetching complain data",
+            error: err.message,
         })
     }
 }
@@ -156,18 +156,18 @@ exports.updateComplain = async (req, res) => {
             complain.title = title;
         }
 
-    
+
         if (description) {
             complain.description = description;
         }
-        
+
         if (image) {
             const cloudinaryResponse =
                 await uploadImageToCloudinary(
                     image,
                     process.env.FOLDER_NAME
                 );
-          
+
             if (!complain.additionalImageUrl) {
                 complain.additionalImageUrl = [];
             }
@@ -175,7 +175,7 @@ exports.updateComplain = async (req, res) => {
             complain.additionalImageUrl.push(
                 cloudinaryResponse.secure_url
             );
-            
+
         }
 
         const updatedComplain = await complain.save();
@@ -196,31 +196,31 @@ exports.updateComplain = async (req, res) => {
         });
     }
 };
-exports.getMyComplains = async(req, res)=>{
-    try{
+exports.getMyComplains = async (req, res) => {
+    try {
         const userId = req.user.id;
-        if(!userId){
+        if (!userId) {
             return res.status(400).json({
-                success : false,
-                message : "User doesn't exists",
+                success: false,
+                message: "User doesn't exists",
             })
         }
         const allComplain = await Complain.find({
-            citizen : userId,
+            citizen: userId,
         }).populate("department")
-        .populate("assignedOfficial")
-        .sort({ createdAt: -1 });
+            .populate("assignedOfficial")
+            .sort({ createdAt: -1 });
         return res.status(200).json({
-            success : true,
-            message :"All complain reterive successfully",
+            success: true,
+            message: "All complain reterive successfully",
             allComplain,
         })
-    }catch(err){
+    } catch (err) {
         console.log(err);
         return res.status(500).json({
-            success : false,
-            message : "Something went wrong",
-            error : err.message,
+            success: false,
+            message: "Something went wrong",
+            error: err.message,
         })
     }
 }

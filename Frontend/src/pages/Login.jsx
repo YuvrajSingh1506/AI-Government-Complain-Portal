@@ -4,6 +4,7 @@ import { Building2 } from "lucide-react"
 // import { useAuth } from "../context/AuthContext.jsx"
 import { login } from "../Services/operation/authAPI"
 import toast from "react-hot-toast"
+
 export default function Login() {
   // const { login } = useAuth()
   const navigate = useNavigate()
@@ -12,10 +13,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
     const user = await login({email,password,navigate});
+   
   }
 
-  return (
+  return (  
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 flex flex-col items-center text-center">

@@ -15,7 +15,7 @@ exports.analyzeComplaint = async ({
 
         const departmentList = departments
             .map((department) => {
-                return `ID: ${department._id}, Name: ${department.name}, Description: ${department.description}`;
+                return ` Name: ${department.name}, Description: ${department.description}`;
             })
             .join("\n");
 
@@ -53,10 +53,13 @@ exports.analyzeComplaint = async ({
             Complaint Description:
             ${description}
 
-            Department Rules:
+            Department Selection Rules:
 
-            - Select ONLY from the department list.
-            - Never invent departments.
+                1. Select EXACTLY one department from the Available Departments list.
+                2. Return the department name EXACTLY as written.
+                3. Do NOT abbreviate.
+                4. Do NOT create new department names.
+                5. If uncertain, choose the closest matching department from the list.
 
             Priority must be exactly one of:
 
@@ -122,7 +125,12 @@ exports.analyzeComplaint = async ({
 
         console.log("Gemini Response:", text);
 
-        return JSON.parse(text);
+        try {
+            return JSON.parse(text);
+        } catch (err) {
+            console.error("Invalid JSON from Gemini:", text);
+            throw new Error("Gemini returned invalid JSON");
+        }
 
     } catch (err) {
 

@@ -2,6 +2,7 @@ const Complain = require("../Models/Complain");
 const User = require("../Models/User");
 const Department = require("../Models/Department");
 const { getCache, setCache } = require("../Utils/cacheServices");
+const { getIO } = require("../Config/socketManager");
 
 exports.assignComplain = async (req, res) => {
     try {
@@ -53,6 +54,19 @@ exports.assignComplain = async (req, res) => {
         official.assignComplainCount += 1;
         await official.save();
         await complain.save();
+        const io = getIO();
+        io.to(official._id.toString()).emit(
+            "newComplaintAssigned",
+            {
+                complaint: complain,
+            }
+        );
+        io.to(complain.citizen.toString()).emit(
+            "complainStatusUpdated",
+            {
+                complaint: complain,
+            }
+        )
         return res.status(200).json({
             success: true,
             message: "Complaint assigned successfully",
@@ -100,7 +114,14 @@ exports.rejectComplain = async (req, res) => {
         complain.rejectionReason = rejectionReason;
 
         const updatedComplain = await complain.save();
+        const io = getIO();
 
+        io.to(updatedComplain.citizen.toString()).emit(
+            "complainStatusUpdated",
+            {
+                complaint: updatedComplain
+            }
+        );
         return res.status(200).json({
             success: true,
             message: "Complaint rejected successfully",

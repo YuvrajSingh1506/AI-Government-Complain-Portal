@@ -1,6 +1,7 @@
 import { apiConnector } from "../apiConnector";
 import { endpoints } from "../api";
 import toast from 'react-hot-toast';
+import socket from "../../Socket/socket";
 const {SIGNUP_API,LOGIN_API} = endpoints;
 export const signUp = async (name, email, password, confirmPassword, role, department, navigate) =>{ 
         const toastId = toast.loading("Loading")
@@ -48,7 +49,10 @@ export const login = async({email , password,navigate}) =>{
         "user",
         JSON.stringify(data.userObj)
         );
-
+        socket.auth = {
+            token: data.token,
+        };
+        socket.connect();
         toast.success("Logged in successfully");
 
         if (data.userObj.role === "Admin") {

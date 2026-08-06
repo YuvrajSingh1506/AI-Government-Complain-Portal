@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom"
 import { Plus } from "lucide-react"
-
+import toast from "react-hot-toast"
 import { useAuth } from "../context/AuthContext.jsx"
 import ComplaintCard from "../components/ComplaintCard.jsx"
 import { useEffect, useState } from "react"
 import { getUserComplain } from "../Services/operation/complainAPI.jsx"
-
+import socket from "../Socket/socket.js"
 export default function CitizenDashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [complaints, setComplaints] = useState([]);
@@ -19,7 +19,34 @@ export default function CitizenDashboard() {
     };
 
     fetchComplaints();
-  }, []); 
+  }, []);
+  useEffect(()=>{
+       const handleComplaintUpdate = (data) => {
+        if(data.complaint.status !== "REJECTED"){
+          toast.success(
+            `Complaint ${data.complaint._id} status updated to ${data.complaint.status}`
+          );        }
+        else{
+          toast.error(`${data.complaint._id} Complaint Rejected\nReason: ${data.reason}`)
+        }
+        setComplaints((prev) =>
+            prev.map((complaint) =>
+                complaint._id === data.complaint._id
+                    ? data.complaint
+                    : complaint
+            )
+        );
+
+    };
+
+    socket.on("complainStatusUpdated", handleComplaintUpdate);
+
+    return () => {
+
+        socket.off("complainStatusUpdated", handleComplaintUpdate);
+
+    };
+  }) 
   return (
     <div>
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

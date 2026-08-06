@@ -9,6 +9,7 @@ export default function ComplaintDetail() {
   const { complainId } = useParams()
   const [complaint, setComplaint] = useState(null)
   const navigate = useNavigate()
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     const fetchComplaint = async () => {
@@ -38,9 +39,16 @@ export default function ComplaintDetail() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Link to="/dashboard" className="mb-4 inline-flex items-center gap-1 text-sm text-primary hover:underline">
+      <button
+        onClick={() => {
+          navigate(-1);
+        }}
+        className="mb-4 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+      >
+
         <ArrowLeft size={16} /> Back
-      </Link>
+
+      </button>
 
       <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
@@ -51,7 +59,7 @@ export default function ComplaintDetail() {
           <div className="flex flex-wrap items-center gap-3">
             <PriorityBadge priority={complaint.priority} />
             <StatusBadge status={complaint.status} />
-            {complaint.status === "PENDING" && (
+            {complaint.status === "PENDING" && user?.role === "Citizen" &&(
               <button
                 onClick={handleDelete}
                 className="flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"

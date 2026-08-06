@@ -1,22 +1,19 @@
 const { Queue } = require("bullmq");
-const { redisClientQueue } = require("../Config/redisQueue");
-const complaintQueue = new Queue(
-    "complaintQueue",
-    {
-        connection: redisClientQueue,
-        defaultJobOptions:{
-            attempts:3,
+const { redisQueueOptions } = require("../Config/redisQueue");
 
-            backoff:{
-                type : "exponential",
-                delay : 5000,
-            },
-            removeOnComplete: 100,
+const complaintQueue = new Queue("complaintQueue", {
+    connection: redisQueueOptions,
+    defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+            type: "exponential",
+            delay: 5000,
+        },
+        removeOnComplete: 100,
+        removeOnFail: false,
+    },
+});
 
-            removeOnFail: false,
-        }
-    }
-)
 module.exports = {
-    complaintQueue
-}
+    complaintQueue,
+};

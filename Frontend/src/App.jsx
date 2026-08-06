@@ -9,7 +9,18 @@ import OfficialDashboard from "./pages/OfficialDashboard.jsx"
 import ProtectedRoute from "./components/ProtectedRoute.jsx"
 import Layout from "./components/Layout.jsx"
 import CreateOfficial from "./pages/CreateOfficial.jsx"
+import { useEffect } from "react"
+import socket from "./Socket/socket.js"
 export default function App() {
+  useEffect(()=>{
+    const token = localStorage.getItem("token");
+    if(token){
+      socket.auth= {token};
+      if(!socket.connected){
+        socket.connect();
+      }
+    }
+  },[]);
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
